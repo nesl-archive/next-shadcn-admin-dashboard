@@ -1,0 +1,73 @@
+name: Build and deploy GitHub Pages
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      pages: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build SSR
+        run: npm run build-ssr
+      - name: Configure Pages
+        id: pages
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+        uses: actions/configure-pages@v6
+      - name: Build static site
+        env:
+          GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          CONFIGURED_ORIGIN: ${{ steps.pages.outputs.origin }}
+          CONFIGURED_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          if [ "${GITHUB_REPOSITORY_NAME,,}" = "${GITHUB_REPOSITORY_OWNER,,}.github.io" ]; then
+            export PAGES_BASE_PATH=""
+          else
+            export PAGES_BASE_PATH="/${GITHUB_REPOSITORY_NAME}"
+          fi
+          if [ "${{ steps.pages.outcome }}" = "success" ]; then
+            export PAGES_BASE_PATH="$CONFIGURED_BASE_PATH"
+          fi
+          export PAGES_SITE_URL="${CONFIGURED_ORIGIN:-https://${GITHUB_REPOSITORY_OWNER}.github.io}${PAGES_BASE_PATH}"
+          npm run build-csr
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: out
+          retention-days: 1
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

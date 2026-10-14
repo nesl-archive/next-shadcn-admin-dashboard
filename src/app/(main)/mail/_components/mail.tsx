@@ -5,7 +5,7 @@ import * as React from "react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useSidebar } from "@/components/ui/sidebar";
-import { setClientCookie } from "@/lib/cookie.client";
+import { getClientCookie, setClientCookie } from "@/lib/cookie.client";
 
 import type { Mail } from "./data";
 import { MailInbox } from "./mail-inbox";
@@ -25,9 +25,27 @@ interface MailProps {
 
 export function MailComponent({ mails, defaultLayout = [...DEFAULT_MAIL_LAYOUT] }: MailProps) {
   const { isMobile } = useSidebar();
+  const [layout, setLayout] = React.useState(defaultLayout);
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
+    if (process.env.NEXT_PUBLIC_STATIC_EXPORT === "true") {
+      const cookie = getClientCookie(MAIL_LAYOUT_COOKIE);
+      if (cookie) {
+        try {
+          const saved: unknown = JSON.parse(cookie);
+          if (
+            Array.isArray(saved) &&
+            saved.length === 2 &&
+            saved.every((size) => typeof size === "number" && Number.isFinite(size) && size >= 30 && size <= 70) &&
+            Math.abs(saved[0] + saved[1] - 100) < 1
+          )
+            setLayout(saved);
+        } catch {
+          /* Ignore malformed or outdated saved layouts. */
+        }
+      }
+    }
     setIsMounted(true);
   }, []);
 
@@ -37,11 +55,7 @@ export function MailComponent({ mails, defaultLayout = [...DEFAULT_MAIL_LAYOUT] 
     );
   }
 
-  return isMobile ? (
-    <MailMobileLayout mails={mails} />
-  ) : (
-    <MailDesktopLayout mails={mails} defaultLayout={defaultLayout} />
-  );
+  return isMobile ? <MailMobileLayout mails={mails} /> : <MailDesktopLayout mails={mails} defaultLayout={layout} />;
 }
 
 function MailMobileLayout({ mails }: Pick<MailProps, "mails">) {

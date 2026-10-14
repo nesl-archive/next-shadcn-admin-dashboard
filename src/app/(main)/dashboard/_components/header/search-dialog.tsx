@@ -17,6 +17,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { withBasePath } from "@/lib/base-path";
 import type { NavMainItem } from "@/navigation/sidebar/sidebar-items";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 
@@ -102,7 +103,7 @@ export function SearchDialog() {
     if (item.disabled) return;
     handleOpenChange(false);
     if (item.newTab) {
-      window.open(item.url, "_blank", "noopener,noreferrer");
+      window.open(item.url.startsWith("/") ? withBasePath(item.url) : item.url, "_blank", "noopener,noreferrer");
     } else {
       router.push(item.url);
     }

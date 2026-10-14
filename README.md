@@ -6,7 +6,7 @@
 
 Most admin templates I found, free or paid, felt cluttered, outdated, or too rigid. I built this as a cleaner alternative with features often missing in others, such as theme toggling and layout controls, while keeping the design modern, minimal, and flexible.
 
-> **View demo:** [studio admin](https://studio-admin.arhamkhnz.com)
+> **View demo:** [GitHub Pages](https://nesl-archive.github.io/next-shadcn-admin-dashboard/)
 
 > [!NOTE]
 > Looking for the Base UI version? Check out [next-shadcn-admin-dashboard-baseui](https://github.com/arhamkhnz/next-shadcn-admin-dashboard-baseui).
@@ -93,19 +93,32 @@ For a full breakdown of the structure with examples, see the [Next Colocation Te
 
 ## Getting Started
 
-You can run this project locally, or deploy it instantly with Vercel.
+Choose **Use this template → Create a new repository** on GitHub to create your own copy with a fresh history. The upstream project is [arhamkhnz/next-shadcn-admin-dashboard](https://github.com/arhamkhnz/next-shadcn-admin-dashboard); retain its license and attribution.
 
-### Deploy with Vercel
+### Build modes
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farhamkhnz%2Fnext-shadcn-admin-dashboard)
+| Command | Output | Hosting | Preferences |
+| --- | --- | --- | --- |
+| `npm run build` / `npm run build-ssr` | `.next-ssr/` (`next build`) | Node.js with `npm start` | Existing server cookies and Server Actions |
+| `npm run build-csr` | `out/` (static HTML, CSS, JavaScript) | GitHub Pages or any static web server | Browser cookies and localStorage |
 
-_Deploy your own copy with one click._
+Build caches are isolated: SSR uses `.next-ssr/`, and the static build uses `.next/`, so building the static site preserves the SSR artifact for `npm start`. Run builds sequentially.
+
+The static build uses Next.js **at build time**, and prerenders HTML with browser hydration and client navigation. Deployment needs no Next.js server or Node.js runtime. It is not a separate Vite SPA. Static hosting cannot provide Server Actions, API routes, middleware, or server authentication; the included auth screens are demos. Browser preferences are restored after hydration, while the existing theme boot script applies theme preferences before hydration.
+
+For a subdirectory deployment, set `PAGES_BASE_PATH=/your-repository` in the build environment before running `npm run build-csr`. Leave it unset for hosting at `/`. Set `PAGES_SITE_URL` to the complete deployment URL for metadata and the sitemap (the workflow does this automatically); SSR deployments can set `NEXT_PUBLIC_SITE_URL`. Update the `Sitemap:` URL in `src/app/robots.txt` for your own domain. Next links and router navigation apply the base path automatically; use `withBasePath` for native URLs such as iframe sources and `window.open`.
+
+### GitHub Pages CI/CD
+
+The workflow builds **both modes** on pushes and pull requests. Only a push to the default branch (or a manual run on that branch) deploys the static artifact. In a new template copy, open **Settings → Pages → Build and deployment → Source → GitHub Actions**, then push a change or run **Build and deploy GitHub Pages** in Actions. Ensure the `github-pages` environment allows your default branch if environment protection is enabled.
+
+The workflow derives the deployment path from the Pages configuration, including project sites, `owner.github.io` sites, and configured custom domains. No repository-specific token or server secret is needed; deployment uses the workflow's scoped GitHub token and OIDC permission. Unknown routes use the exported `404.html`; known routes have directory indexes so direct navigation and refresh work on static hosts.
 
 ### Run locally
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/arhamkhnz/next-shadcn-admin-dashboard.git
+   git clone https://github.com/nesl-archive/next-shadcn-admin-dashboard.git
    ```
    
 2. **Navigate into the project**

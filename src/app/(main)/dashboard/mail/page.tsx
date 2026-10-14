@@ -4,6 +4,7 @@ import { ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Button } from "@/components/ui/button";
+import { withBasePath } from "@/lib/base-path";
 
 export const metadata: Metadata = {
   robots: {
@@ -29,7 +30,11 @@ export default function Page() {
         </Button>
       </div>
 
-      <iframe src="/mail" title="Mail preview" className="min-h-0 flex-1 rounded-lg border bg-background" />
+      <iframe
+        src={withBasePath("/mail/")}
+        title="Mail preview"
+        className="min-h-0 flex-1 rounded-lg border bg-background"
+      />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = "https://studio-admin.arhamkhnz.com";
+import { SITE_URL } from "@/config/site-config";
+
+export const dynamic = "force-static";
 
 const PUBLIC_ROUTES = [
   "/",
